@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { exportExcelSloof } from "@/lib/exportExcel";
 import { Download } from "lucide-react";
@@ -26,7 +27,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import getBasicPrice from "@/lib/getPrice";
-import formatCurrency from "@/lib/formatCurencies";
+
+import ResultDisplay from "./tableResult";
 
 const calculator = new ConcreteCalculator();
 
@@ -42,6 +44,8 @@ type FormInput = {
   stirrupSpacing: number;
 };
 
+
+
 const SloofCalculatorForm: React.FC = () => {
   const {
     register,
@@ -49,6 +53,8 @@ const SloofCalculatorForm: React.FC = () => {
     control,
     formState: { errors },
   } = useForm<FormInput>();
+
+
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -58,7 +64,12 @@ const SloofCalculatorForm: React.FC = () => {
   const concreteGrades = ["K175", "K200", "K225", "K250", "K300"];
   const rebarSizes = [6, 8, 10, 12, 16, 19, 22, 25];
 
-  const onSubmit: SubmitHandler<FormInput> = (data) => {
+  const onSubmit: SubmitHandler<FormInput> = (data, event) => {
+
+    if (event){
+      event.preventDefault();
+    }
+
     if (data.mainRebarSize > data.stirrupSize) {
       setAlertMessage("Ukuran tulang utama harus lebih besar dari sengkang");
       setShowAlert(true);
@@ -74,14 +85,16 @@ const SloofCalculatorForm: React.FC = () => {
     const concreteCover = data.concreteCover;
     const hookLength = 5;
 
-
     const cementPrice = getBasicPrice("Semen Portland (PC) @ 50 Kg perKg") || 0;
     const sandPrice = getBasicPrice("Pasir Beton m3") || 0;
     const gravelPrice = getBasicPrice("Batu kerikil/ koral beton m3") || 0;
     const waterPrice = getBasicPrice("Air Bersih Liter") || 0;
 
     const rebarPrice =
-      getBasicPrice(`Besi Beton Dia.${data.mainRebarSize} mm (SNI) btg`) || 0;
+      getBasicPrice(`Besi Beton Dia.${data.mainRebarSize} mm (SNI)`) || 0;
+
+      const rebarPricePerBar = rebarPrice * 12
+
     const stirrupPrice =
       getBasicPrice(`Besi Beton Dia.${data.stirrupSize} mm (SNI)`) || 0;
 
@@ -127,7 +140,7 @@ const SloofCalculatorForm: React.FC = () => {
     const gravelCost = concreteMix.gravel * volume * gravelPrice;
     const waterCost = concreteMix.water * volume * waterPrice;
 
-    const rebarCost = mainRebarBars * rebarPrice;
+    const rebarCost = mainRebarBars * rebarPricePerBar;
     const stirrupCost = stirrupWeight * stirrupPrice;
 
     const totalPrice =
@@ -139,9 +152,7 @@ const SloofCalculatorForm: React.FC = () => {
       stirrupCost +
       woodFormCost;
 
-   
-
-    console.log(mainRebarBars)
+    console.log(mainRebarBars);
 
     setResult({
       cost: {
@@ -185,6 +196,7 @@ const SloofCalculatorForm: React.FC = () => {
       },
     });
   };
+
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -398,50 +410,9 @@ const SloofCalculatorForm: React.FC = () => {
             <CardTitle>Hasil Perhitungan</CardTitle>
           </CardHeader>
           <CardContent>
-            <h3 className="font-semibold">Kebutuhan Beton:</h3>
-            <p> Mutu Beton yang dipilih: {result.concrete.grade}</p>
-            <p>Volume: {result.concrete.volume} m³</p>
-            <p>
-              Semen: {result.concrete.cement.weight} kg (
-              {result.concrete.cement.sacks} sak)
-            </p>
-            <p>Pasir: {result.concrete.sand} m³</p>
-            <p>Kerikil: {result.concrete.gravel} m³</p>
-            <p>Air: {result.concrete.water} liter</p>
+            <ResultDisplay result={result} />
 
-            <h3 className="font-semibold mt-4">Kebutuhan Besi:</h3>
-
-            <p>
-              Tulangan Utama: D{result.rebar.mainRebar.size}mm -{" "}
-              {result.rebar.mainRebar.weight} kg ({result.rebar.mainRebar.bars}{" "}
-              batang)
-            </p>
-            <p>
-              Sengkang: D{result.rebar.stirrup.size}mm -{" "}
-              {result.rebar.stirrup.weight} kg ({result.rebar.stirrup.bars}{" "}
-              batang)
-            </p>
-            <p>
-              Panjang per Sengkang: {result.rebar.stirrup.perimeter} m (termasuk
-              lekukan)
-            </p>
-
-            <h3 className="font-semibold mt-4">Kebutuhan Bekisting:</h3>
-
-            <p>Volume Papan Bekisting: {result.formwork.volume} m3</p>
-            <p>Jumlah Papan Bekisting: {result.formwork.QTY} Lbr</p>
-
-            <h3 className="font-semibold mt-4">Estimasi Biaya</h3>
-
-            <p>Semen : {formatCurrency(result.cost.cementCost)}</p>
-            <p>Pasir : {formatCurrency(result.cost.sandCost)}</p>
-            <p>Kerikil : {formatCurrency(result.cost.gravelCost)}</p>
-            <p>Air : {formatCurrency(result.cost.waterCost)}</p>
-            <p>Tulangan Utama : {formatCurrency(result.cost.rebarCost)}</p>
-            <p>Sengkang : {formatCurrency(result.cost.stirrupCost)}</p>
-            <p>Bekisting : {formatCurrency(result.cost.woodFormCost)}</p>
-
-            <p>Total : {formatCurrency(result.cost.totalPrice)}</p>
+          
           </CardContent>
           <div className="flex justify-center">
             <Button

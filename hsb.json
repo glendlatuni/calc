@@ -339,13 +339,9 @@
       "Satuan": "Kg",
       "Harga Dasar": 12220.0
     },
+
     {
-      "Nama Bahan": "Besi Beton Dia.12 mm (SNI) btg",
-      "Satuan": "Batang",
-      "Harga Dasar": 132752.448
-    },
-    {
-      "Nama Bahan": "Besi Beton Dia.12 mm (SNI) kg",
+      "Nama Bahan": "Besi Beton Dia.12 mm (SNI)",
       "Satuan": "Kg",
       "Harga Dasar": 12458.0
     },
